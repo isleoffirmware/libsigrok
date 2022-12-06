@@ -19,9 +19,12 @@
 #include <config.h>
 #include "protocol.h"
 
+// TODO: rename device to renode instead of virtual, create fifo driver instead of using serial driver
+
 #define FIFO_PATH "../../../fifo"
 
 static const uint32_t scanopts[] = {
+	SR_CONF_FORCE_DETECT // NOTE: dummy config so that STD_CONFIG_LIST() doesn't read garbage
 };
 
 // NOTE: see similar scope/logic analyzers - link-mso19, hameg-hmo, siglent-sds
@@ -31,6 +34,7 @@ static const uint32_t drvopts[] = {
 };
 
 static const uint32_t devopts[] = {
+	SR_CONF_SAMPLERATE // NOTE: dummy config so that STD_CONFIG_LIST() doesn't read garbage
 };
 
 static struct sr_dev_driver virtual_driver_info;
@@ -42,15 +46,11 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 	struct dev_context *devc;
 	GSList *devices;
 
-	// TODO: allow user to configure scope/LA options here
 	(void)options;
 
 	devices = NULL;
 	drvc = di->context;
 	drvc->instances = NULL;
-
-	// TODO: PV only allows for USB, serial or TCP connections - need to support a new type of connection
-	// - how does the demo device interact with PV??? maybe recompile it in and see
 
 	sdi = g_malloc0(sizeof(struct sr_dev_inst));
 	sdi->status = SR_ST_INACTIVE;
@@ -128,20 +128,12 @@ static int config_set(uint32_t key, GVariant *data,
 static int config_list(uint32_t key, GVariant **data,
 	const struct sr_dev_inst *sdi, const struct sr_channel_group *cg)
 {
-	int ret;
-
-	(void)sdi;
-	(void)data;
-	(void)cg;
-
-	ret = SR_OK;
 	switch (key) {
-	/* TODO */
+	case SR_CONF_DEVICE_OPTIONS:
+		return STD_CONFIG_LIST(key, data, sdi, cg, scanopts, drvopts, devopts);
 	default:
 		return SR_ERR_NA;
 	}
-
-	return ret;
 }
 
 static int dev_acquisition_start(const struct sr_dev_inst *sdi)
@@ -153,10 +145,7 @@ static int dev_acquisition_start(const struct sr_dev_inst *sdi)
 	if (ret != SR_OK)
 		return ret;
 
-	// TODO: write samples at 10Hz on C# side, read at 10Hz on libsigrok side
-	// TODO: speed up C# writing and slow down reading here in the future with buffered FIFO
-
-	// TODO: does this set sample rate??? or just timeout...
+	// TODO: may need sr_session_source_add_pollfd() instead
 	ret = sr_session_source_add(sdi->session, devc->fd, (G_IO_IN | G_IO_ERR), 
 			100, virtual_receive_data, (void *)sdi);
 	if (ret != SR_OK)

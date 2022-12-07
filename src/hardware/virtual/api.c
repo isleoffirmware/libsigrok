@@ -22,7 +22,8 @@
 // TODO: create fifo driver instead of using serial driver, move the fs calls from this API to the driver
 // TODO: rename device to renode instead of virtual
 
-#define FIFO_PATH "../../../fifo"
+#define FIFO_PATH_FROM_PV "../fifo"
+#define FIFO_PATH_FROM_SIMULATOR_SCRIPT "fifo"
 
 static const uint32_t scanopts[] = {
 	SR_CONF_FORCE_DETECT // NOTE: dummy config so that STD_CONFIG_LIST() doesn't read garbage
@@ -71,9 +72,14 @@ static int dev_open(struct sr_dev_inst *sdi)
 {
 	struct dev_context *devc = sdi->priv;
 
-	devc->fd = open(FIFO_PATH, O_RDONLY);
+	// TODO (SW-10): remove this filename hack and open fifo using absolute path
+	devc->fd = open(FIFO_PATH_FROM_PV, O_RDONLY);
 	if (devc->fd == -1)
-		return SR_ERR_IO;
+	{
+		devc->fd = open(FIFO_PATH_FROM_SIMULATOR_SCRIPT, O_RDONLY);
+		if (devc->fd == -1)
+			return SR_ERR_IO;
+	}
 	
 	sdi->status = SR_ST_ACTIVE;
 

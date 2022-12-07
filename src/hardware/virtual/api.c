@@ -60,6 +60,8 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 	devc = g_malloc0(sizeof(struct dev_context));
 	devc->fd = -1;
 
+	sdi->priv = devc;
+
 	devices = g_slist_append(devices, sdi);
 
 	return std_scan_complete(di, devices);

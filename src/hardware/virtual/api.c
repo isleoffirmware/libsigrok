@@ -19,7 +19,8 @@
 #include <config.h>
 #include "protocol.h"
 
-// TODO: rename device to renode instead of virtual, create fifo driver instead of using serial driver
+// TODO: create fifo driver instead of using serial driver, move the fs calls from this API to the driver
+// TODO: rename device to renode instead of virtual
 
 #define FIFO_PATH "../../../fifo"
 
@@ -59,7 +60,9 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 	devc = g_malloc0(sizeof(struct dev_context));
 	devc->fd = -1;
 
-	return devices;
+	devices = g_slist_append(devices, sdi);
+
+	return std_scan_complete(di, devices);
 }
 
 static int dev_open(struct sr_dev_inst *sdi)

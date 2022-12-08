@@ -168,7 +168,6 @@ static int dev_acquisition_start(const struct sr_dev_inst *sdi)
 	if (ret != SR_OK)
 		return ret;
 
-	// TODO: may need sr_session_source_add_pollfd() instead
 	ret = sr_session_source_add(sdi->session, devc->fd, (G_IO_IN | G_IO_ERR), 
 			100, virtual_receive_data, (void *)sdi);
 	if (ret != SR_OK)

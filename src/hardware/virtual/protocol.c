@@ -23,9 +23,8 @@ SR_PRIV int virtual_receive_data(int fd, int revents, void *cb_data)
 	struct dev_context *devc;
 	struct sr_datafeed_logic logic;
 	struct sr_datafeed_packet packet;
-	uint8_t data;
+	uint8_t data = 0;
 
-	// TODO: which fd is this?
 	(void)fd;
 
 	if (!(sdi = cb_data) || !(devc = sdi->priv))
@@ -38,7 +37,8 @@ SR_PRIV int virtual_receive_data(int fd, int revents, void *cb_data)
 		return TRUE;
 
 	if (revents == G_IO_IN) {
-		if (read(devc->fd, &data, 0) != 1)
+		// NOTE: only read 1 byte for now
+		if (read(devc->fd, &data, 1) != 1)
 			return TRUE;
 
 		logic.data = &data;

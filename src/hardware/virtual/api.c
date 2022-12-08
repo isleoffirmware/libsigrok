@@ -19,9 +19,6 @@
 #include <config.h>
 #include "protocol.h"
 
-// TODO: create fifo driver instead of using serial driver, move the fs calls from this API to the driver
-// TODO: rename device to renode instead of virtual
-
 #define FIFO_PATH_FROM_PV "../fifo"
 #define FIFO_PATH_FROM_SIMULATOR_SCRIPT "fifo"
 

@@ -22,6 +22,9 @@
 #define FIFO_PATH_FROM_PV "../fifo"
 #define FIFO_PATH_FROM_SIMULATOR_SCRIPT "fifo"
 
+#define CHANNEL_NAME_LENGTH (16U)
+#define NUM_LOGIC_CHANNELS (1U)
+
 static const uint32_t scanopts[] = {
 	SR_CONF_FORCE_DETECT // NOTE: dummy config so that STD_CONFIG_LIST() doesn't read garbage
 };
@@ -43,7 +46,11 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 	struct drv_context *drvc;
 	struct sr_dev_inst *sdi;
 	struct dev_context *devc;
+	struct sr_channel *ch;
+	struct sr_channel_group *cg;
+	char channel_name[CHANNEL_NAME_LENGTH];
 	GSList *devices;
+	unsigned int i;
 
 	(void)options;
 
@@ -59,6 +66,14 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 	devc->fd = -1;
 
 	sdi->priv = devc;
+
+	cg = sr_channel_group_new(sdi, "Logic", NULL);
+
+	for (i = 0; i < NUM_LOGIC_CHANNELS; i++) {
+		snprintf(channel_name, CHANNEL_NAME_LENGTH, "D%d", i);
+		ch = sr_channel_new(sdi, i, SR_CHANNEL_LOGIC, TRUE, channel_name);
+		cg->channels = g_slist_append(cg->channels, ch);
+	}
 
 	devices = g_slist_append(devices, sdi);
 

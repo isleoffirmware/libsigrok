@@ -26,8 +26,8 @@
 struct dev_context {
 	/** FIFO filename */
 	int fd;
+	uint64_t cur_samplerate;
 	// TODO: add configurations
-	// uint64_t cur_samplerate; // SR_CONF_SAMPLERATE
 	// int32_t num_logic_channels; // SR_CONF_NUM_LOGIC_CHANNELS
 	// int32_t num_analog_channels; // SR_CONF_NUM_ANALOG_CHANNELS
 	// size_t enabled_logic_channels; // SR_CONF_ENABLED?

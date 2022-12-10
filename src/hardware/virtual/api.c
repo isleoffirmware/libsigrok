@@ -25,6 +25,8 @@
 #define CHANNEL_NAME_LENGTH (16U)
 #define NUM_LOGIC_CHANNELS (1U)
 
+#define RENODE_SAMPLERATE (SR_KHZ(1)) // TODO: update with actual renode sample rate
+
 static const uint32_t scanopts[] = {
 	SR_CONF_FORCE_DETECT // NOTE: dummy config so that STD_CONFIG_LIST() doesn't read garbage
 };
@@ -36,7 +38,7 @@ static const uint32_t drvopts[] = {
 };
 
 static const uint32_t devopts[] = {
-	SR_CONF_SAMPLERATE // NOTE: dummy config so that STD_CONFIG_LIST() doesn't read garbage
+	SR_CONF_SAMPLERATE | SR_CONF_GET,
 };
 
 static struct sr_dev_driver virtual_driver_info;
@@ -54,6 +56,9 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 
 	(void)options;
 
+	if (!di)
+		return NULL;
+
 	devices = NULL;
 	drvc = di->context;
 	drvc->instances = NULL;
@@ -64,6 +69,7 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 
 	devc = g_malloc0(sizeof(struct dev_context));
 	devc->fd = -1;
+	devc->cur_samplerate = RENODE_SAMPLERATE;
 
 	sdi->priv = devc;
 
@@ -82,7 +88,12 @@ static GSList *scan(struct sr_dev_driver *di, GSList *options)
 
 static int dev_open(struct sr_dev_inst *sdi)
 {
-	struct dev_context *devc = sdi->priv;
+	struct dev_context *devc;
+
+	if (!sdi)
+		return SR_ERR_ARG;
+
+	devc = sdi->priv;
 
 	// TODO (SW-10): remove this filename hack and open fifo using absolute path
 	devc->fd = open(FIFO_PATH_FROM_PV, O_RDONLY);
@@ -100,7 +111,12 @@ static int dev_open(struct sr_dev_inst *sdi)
 
 static int dev_close(struct sr_dev_inst *sdi)
 {
-	struct dev_context *devc = sdi->priv;
+	struct dev_context *devc;
+
+	if (!sdi)
+		return SR_ERR_ARG;
+
+	devc = sdi->priv;
 
 	if (close(devc->fd) == -1)
 		return SR_ERR_IO;
@@ -113,20 +129,24 @@ static int dev_close(struct sr_dev_inst *sdi)
 static int config_get(uint32_t key, GVariant **data,
 	const struct sr_dev_inst *sdi, const struct sr_channel_group *cg)
 {
-	int ret;
-
-	(void)sdi;
-	(void)data;
 	(void)cg;
 
-	ret = SR_OK;
+	struct dev_context *devc;
+
+	if (!sdi)
+		return SR_ERR_ARG;
+
+	devc = sdi->priv;
+
 	switch (key) {
-	/* TODO */
+	case SR_CONF_SAMPLERATE:
+		*data = g_variant_new_uint64(devc->cur_samplerate);
+		break;
 	default:
 		return SR_ERR_NA;
 	}
 
-	return ret;
+	return SR_OK;
 }
 
 static int config_set(uint32_t key, GVariant *data,
@@ -161,8 +181,13 @@ static int config_list(uint32_t key, GVariant **data,
 
 static int dev_acquisition_start(const struct sr_dev_inst *sdi)
 {
-	struct dev_context *devc = sdi->priv;
 	int ret;
+	struct dev_context *devc;
+
+	if (!sdi)
+		return SR_ERR_ARG;
+
+	devc = sdi->priv;
 	
 	ret = std_session_send_df_header(sdi);
 	if (ret != SR_OK)
@@ -178,8 +203,13 @@ static int dev_acquisition_start(const struct sr_dev_inst *sdi)
 
 static int dev_acquisition_stop(struct sr_dev_inst *sdi)
 {
-	struct dev_context *devc = sdi->priv;
 	int ret;
+	struct dev_context *devc;
+
+	if (!sdi)
+		return SR_ERR_ARG;
+
+	devc = sdi->priv;
 
 	/* Remove session source and send EOT packet */
 	ret = sr_session_source_remove(sdi->session, devc->fd);

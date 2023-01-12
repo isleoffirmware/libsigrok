@@ -2,4 +2,5 @@
 
 ./autogen.sh
 ./configure --disable-all-drivers --enable-virtual --without-zlib --without-libserialport --without-libftdi --without-libhidapi --without-libbluez --without-libnettle --without-libusb --without-librevisa --without-libgpib --without-libieee1284 --without-libgio --disable-ruby --disable-java --disable-python
-./build_and_install.sh
+make -j100
+sudo make install -j100

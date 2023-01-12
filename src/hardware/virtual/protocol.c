@@ -17,9 +17,6 @@
 #include <config.h>
 #include "protocol.h"
 
-#define ASCII_0 (48U)
-#define ASCII_9 (57U)
-
 SR_PRIV int virtual_receive_data(int fd, int revents, void *cb_data)
 {
 	const struct sr_dev_inst *sdi;
@@ -43,13 +40,6 @@ SR_PRIV int virtual_receive_data(int fd, int revents, void *cb_data)
 		// NOTE: only read 1 byte for now
 		if (read(devc->fd, &data, 1) != 1)
 			return TRUE;
-
-		// only parse ASCII 0-9
-		// NOTE: getting ASCII LF from shell script
-		if ((data < ASCII_0) || (data > ASCII_9))
-			return TRUE;
-
-		data = data - ASCII_0;
 
 		logic.data = &data;
 		logic.length = 1;

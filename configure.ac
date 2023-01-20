@@ -35,12 +35,6 @@ m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 AC_CANONICAL_HOST
 
-# Checks for programs.
-AC_PROG_CC
-AC_PROG_CXX
-AC_PROG_INSTALL
-AC_PROG_LN_S
-
 # Required for per-target flags or subdir-objects with C sources.
 AM_PROG_CC_C_O
 
@@ -49,6 +43,9 @@ AH_VERBATIM([_POSIX_C_SOURCE], [/* The targeted POSIX standard. */
 #ifndef _POSIX_C_SOURCE
 # define _POSIX_C_SOURCE 200112L
 #endif])
+
+CC=emcc
+CXX=em++
 
 # Get compiler versions.
 SR_PROG_VERSION([$CC], [sr_cc_version])
@@ -401,11 +398,6 @@ AC_ARG_ENABLE([java],
 
 sr_cxx_missing=
 
-# Check if the C++ compiler supports the C++11 standard.
-AX_CXX_COMPILE_STDCXX([11], [noext], [optional])
-AS_IF([test "x$HAVE_CXX11" != x1],
-	[SR_APPEND([sr_cxx_missing], [', '], ['C++11'])])
-
 # The C++ bindings need glibmm.
 SR_PKG_CHECK([glibmm], [SR_PKGLIBS_CXX], [glibmm-2.4 >= 2.32.0])
 AS_IF([test "x$sr_have_glibmm" != xyes],
@@ -415,9 +407,6 @@ AS_IF([test "x$sr_have_glibmm" != xyes],
 AC_CHECK_PROG([HAVE_DOXYGEN], [doxygen], [yes], [no])
 AS_IF([test "x$HAVE_DOXYGEN" != xyes],
 	[SR_APPEND([sr_cxx_missing], [', '], [Doxygen])])
-
-# Link C++ code with gnustl_shared if it exists (Android)
-SR_SEARCH_LIBS([SR_EXTRA_CXX_LIBS], [__cxa_throw], [gnustl_shared])
 
 # Python is needed for the C++ bindings.
 AM_PATH_PYTHON([2.7],
